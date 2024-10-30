@@ -12,8 +12,8 @@ $MONGO_DATABASE = 'nummu';
 
 // Informations WooCommerce API
 $woocommerce_api_url = "https://nummu.ca/wp-json/wc/v3/products";
-$consumer_key = 'ck_c5b5a2fcc17c9dca0ea3d954ee338c62b5df3d53';
-$consumer_secret = 'cs_f73e1dcb0b4150507596535c309307fba27f36a0';
+$consumer_key = 'ck_dbbc96cd1a086d92512baf6d407706dad8e2e449';
+$consumer_secret = 'cs_83157af9ddf2be8d32e632fdfc701d9bced95fdf';
 
 // Fonction pour télécharger l'image d'une annonce et l'ajouter à la Media Library
 function download_and_insert_image_to_wp_media_library($image_url, $annonce_id) {
