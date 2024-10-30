@@ -154,8 +154,8 @@ try {
                     ['key' => 'longitude', 'value' => isset($annonce['longitude']) ? (string)$annonce['longitude'] : ''],
                 ],
                 'categories' => [
-                    ['id' => 400], // Catégorie 'Annonce Immobilière'
-                    ['id' => 252], // Catégorie 'Facebook'
+                    ['id' => 183], // Catégorie 'Annonce Immobilière'
+                    ['id' => 182], // Catégorie 'Facebook'
                 ],
                 'images' => !is_null($image_id) ? [['id' => $image_id]] : []
             ];
