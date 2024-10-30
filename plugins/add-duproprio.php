@@ -20,24 +20,20 @@ function download_and_insert_image_to_wp_media_library($image_url, $annonce_id) 
         return null; // Pas d'image à traiter
     }
 
-    // Télécharger l'image
     $image_data = file_get_contents($image_url);
     if ($image_data === false) {
         return null; // Impossible de télécharger l'image
     }
 
-    // Obtenir le chemin des uploads WordPress et générer un nom de fichier unique avec l'ID de l'annonce
     $upload_dir = wp_upload_dir();
     $file_name = 'annonce_image_' . $annonce_id . '.jpg';
     $file_path = $upload_dir['path'] . '/' . $file_name;
 
-    // Enregistrer l'image dans le répertoire WordPress
     $result = file_put_contents($file_path, $image_data);
     if ($result === false) {
-        return null; // Erreur lors de l'enregistrement de l'image
+        return null;
     }
 
-    // Ajouter l'image à la Media Library
     $attachment = array(
         'guid' => $upload_dir['url'] . '/' . $file_name,
         'post_mime_type' => 'image/jpeg',
@@ -46,16 +42,14 @@ function download_and_insert_image_to_wp_media_library($image_url, $annonce_id) 
         'post_status' => 'inherit'
     );
 
-    // Insérer l'image dans la base de données WordPress
     $attach_id = wp_insert_attachment($attachment, $file_path);
     require_once(ABSPATH . 'wp-admin/includes/image.php');
     $attach_data = wp_generate_attachment_metadata($attach_id, $file_path);
     wp_update_attachment_metadata($attach_id, $attach_data);
 
-    return $attach_id; // Retourner l'ID de l'image dans la Media Library
+    return $attach_id;
 }
 
-// Fonction pour extraire la ville à partir de la catégorie ou du champ city
 function extract_city_from_duproprio($annonce) {
     if (!empty($annonce['city'])) {
         return $annonce['city'];
@@ -73,10 +67,10 @@ function extract_city_from_duproprio($annonce) {
     return 'Ville non disponible';
 }
 
-// Fonction pour nettoyer l'adresse en retirant "à vendre" si présent
 function clean_address($address) {
     $address = str_replace(' à vendre', '', $address);
-    return trim($address);
+    $address = trim($address);
+    return $address;
 }
 
 try {
@@ -84,7 +78,6 @@ try {
     $database = $client->selectDatabase($MONGO_DATABASE);
     
     $collection = $database->selectCollection('duproprio_full');
-    
     $annonces = $collection->find(['active' => true], ['limit' => 10])->toArray();
     
     if (!empty($annonces)) {
@@ -128,15 +121,15 @@ try {
             curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($annonce_data));
             curl_setopt($ch, CURLOPT_USERPWD, $consumer_key . ":" . $consumer_secret);
             curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
-            
+
             $response = curl_exec($ch);
-            
+
             if (curl_errno($ch)) {
                 echo 'Erreur cURL : ' . curl_error($ch) . "\n";
             } else {
                 $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
                 $response_data = json_decode($response, true);
-                
+
                 if ($http_code === 201 && isset($response_data['id'])) {
                     echo "Produit créé avec succès ! Nom : " . $response_data['name'] . " (ID : " . $response_data['id'] . ")\n";
                 } elseif ($http_code === 200 && is_null($response_data)) {
@@ -145,7 +138,7 @@ try {
                     echo "Erreur HTTP $http_code lors de l'ajout de l'annonce. Réponse complète de l'API :\n" . $response . "\n";
                 }
             }
-            
+
             curl_close($ch);
         }
     } else {
