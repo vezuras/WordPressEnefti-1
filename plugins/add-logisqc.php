@@ -172,8 +172,8 @@ try {
                     ['key' => 'longitude', 'value' => isset($annonce['address']['longitude']) ? (string)$annonce['address']['longitude'] : ''],
                 ],
                 'categories' => [
-                    ['id' => 400], // Catégorie 'Annonce Immobilière' - Vérifiez cet ID
-                    ['id' => 255], // Catégorie 'LogisQuébec' - Vérifiez cet ID
+                    ['id' => 183], // Catégorie 'Annonce Immobilière' - Vérifiez cet ID
+                    ['id' => 181], // Catégorie 'LogisQuébec' - Vérifiez cet ID
                 ],
                 'images' => !is_null($image_id) ? [['id' => $image_id]] : []
             ];
