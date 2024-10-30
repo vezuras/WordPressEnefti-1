@@ -94,7 +94,7 @@
 //                     ['key' => 'broker_geolocations', 'value' => json_encode($broker['broker_geolocations'] ?? [])],
 //                     ['key' => 'broker_language', 'value' => $languages],
 //                 ],
-//                 'categories' => [['id' => 259]],
+//                 'categories' => [['id' => 176]],
 //                 'images' => !is_null($image_id) ? [['id' => $image_id]] : []
 //             ];
 
@@ -244,7 +244,7 @@ try {
                     ['key' => 'broker_address', 'value' => $broker['broker_address']],
                     ['key' => 'broker_geolocations', 'value' => json_encode($broker['broker_geolocations'] ?? [])],
                 ],
-                'categories' => [['id' => 259]], // Catégorie 'Courtier Immobilier'
+                'categories' => [['id' => 176]], // Catégorie 'Courtier Immobilier'
                 'images' => !is_null($image_id) ? [['id' => $image_id]] : []
             ];
 
