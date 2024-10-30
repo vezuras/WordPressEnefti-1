@@ -1,66 +1,143 @@
 <?php
+// Inclure les dépendances MongoDB et WordPress
+require 'vendor/autoload.php'; // Charger MongoDB
+require_once($_SERVER['DOCUMENT_ROOT'] . '/wp-load.php'); // Charger WordPress
 
-// Vérifiez que WordPress est chargé avant d'exécuter ce script
+// Informations de connexion MongoDB
+$MONGO_USERNAME = getenv('NUMMU_USERNAME') ?: 'nummu';
+$MONGO_PASSWORD = getenv('NUMMU_PASSWORD') ?: 'PTxyFp06N4kLlZ8G';
+$MONGO_URI = "mongodb+srv://$MONGO_USERNAME:$MONGO_PASSWORD@NUMMU.nblabru.mongodb.net/?retryWrites=true&w=majority&appName=NUMMU";
+$MONGO_DATABASE = 'nummu';
 
-if (!defined('ABSPATH')) {
+// Informations WooCommerce API
+$woocommerce_api_url = "https://nummu.ca/wp-json/wc/v3/products";
+$consumer_key = 'ck_c5b5a2fcc17c9dca0ea3d954ee338c62b5df3d53';
+$consumer_secret = 'cs_f73e1dcb0b4150507596535c309307fba27f36a0';
 
-    exit;
-
-}
-
-
-function add_broker_product($broker_name, $broker_description, $broker_price) {
-
-    // Assurez-vous que WooCommerce est actif
-
-    if (!class_exists('WooCommerce')) {
-
-        return;
-
+// Fonction pour télécharger et vérifier si une image existe déjà
+function download_and_insert_image_to_wp_media_library($image_url, $broker_id) {
+    if (empty($image_url)) {
+        return null; // Pas d'image à traiter
     }
 
+    $upload_dir = wp_upload_dir();
+    $file_name = 'broker_image_' . $broker_id . '.jpg';
+    $file_path = $upload_dir['path'] . '/' . $file_name;
 
-    // Créer un nouveau produit WooCommerce
+    $attachment_id = attachment_url_to_postid($upload_dir['url'] . '/' . $file_name);
+    if ($attachment_id) {
+        return $attachment_id;
+    }
 
-    $new_product = array(
+    $image_data = file_get_contents($image_url);
+    if ($image_data === false) {
+        return null;
+    }
 
-        'post_title'    => $broker_name,
+    file_put_contents($file_path, $image_data);
+    
+    $attachment = [
+        'guid' => $upload_dir['url'] . '/' . $file_name,
+        'post_mime_type' => 'image/jpeg',
+        'post_title' => sanitize_file_name($file_name),
+        'post_content' => '',
+        'post_status' => 'inherit'
+    ];
 
-        'post_content'  => $broker_description,
+    $attach_id = wp_insert_attachment($attachment, $file_path);
+    require_once(ABSPATH . 'wp-admin/includes/image.php');
+    $attach_data = wp_generate_attachment_metadata($attach_id, $file_path);
+    wp_update_attachment_metadata($attach_id, $attach_data);
 
-        'post_status'   => 'publish',
+    return $attach_id;
+}
 
-        'post_type'     => 'product',
+// Essai de connexion à MongoDB
+try {
+    $client = new MongoDB\Client($MONGO_URI);
+    $database = $client->selectDatabase($MONGO_DATABASE);
+    $collection = $database->selectCollection('centris_brokers_full');
 
-    );
+    $brokers = $collection->find([], ['limit' => 25])->toArray();
 
+    if (!empty($brokers)) {
+        foreach ($brokers as $broker) {
+            $image_id = !empty($broker['broker_image_url']) ? download_and_insert_image_to_wp_media_library($broker['broker_image_url'], (string)$broker['_id']) : null;
 
-    // Insérer le produit dans la base de données
+            $formatted_job = strtoupper(str_replace(['Residential', 'Commercial'], ['Résidentiel', 'Commercial'], $broker['broker_job']));
+            $language_options = ['french' => 'FR', 'english' => 'EN', 'spanish' => 'ES', 'creole' => 'CR', 'german' => 'DE', 'italian' => 'IT', 'portuguese' => 'PT', 'dutch' => 'NL', 'russian' => 'RU', 'chinese' => 'ZH', 'japanese' => 'JA', 'korean' => 'KO'];
+            $languages = implode(', ', array_map(function($lang) use ($language_options) {
+                return $language_options[$lang] ?? strtoupper($lang);
+            }, explode(', ', strtolower($broker['broker_language']))));
 
-    $product_id = wp_insert_post($new_product);
+            $broker_data = [
+                'name' => $broker['broker_name'] ?? 'Courtier sans nom',
+                'type' => 'external',
+                'regular_price' => '',
+                'sale_price' => '',
+                'description' => !empty($broker['broker_area']) ? "<strong>Zone(s) servie(s):</strong> {$broker['broker_area']}<br>" : '',
+                'short_description' => "
+                    <p><strong>POSTE:</strong> $formatted_job<br>
+                    <strong>AGENCE:</strong> " . strtoupper($broker['broker_agency']) . "<br>
+                    {$broker['broker_address']}<br>
+                    <strong>LANGUE(S):</strong> $languages</p>",
+                'external_url' => $broker['broker_url'] ?? '',
+                'button_text' => 'Fiche Centris',
+                'meta_data' => [
+                    ['key' => 'broker_id', 'value' => (string)$broker['_id']],
+                    ['key' => 'broker_license', 'value' => $broker['broker_license'] ?? ''],
+                    ['key' => 'broker_agency', 'value' => strtoupper($broker['broker_agency']) ?? ''], // Ajout de l'agence ici
+                    ['key' => 'broker_phone', 'value' => json_encode($broker['broker_phone'] ?? [])],
+                    ['key' => 'broker_city', 'value' => $broker['broker_city'] ?? ''],
+                    ['key' => 'broker_province', 'value' => $broker['broker_province'] ?? ''],
+                    ['key' => 'broker_postal_code', 'value' => $broker['broker_postal_code'] ?? ''],
+                    ['key' => 'broker_geolocations', 'value' => json_encode($broker['broker_geolocations'] ?? [])],
+                    ['key' => 'broker_language', 'value' => $languages],
+                ],
+                'categories' => [['id' => 259]],
+                'images' => !is_null($image_id) ? [['id' => $image_id]] : []
+            ];
 
+            echo "Données envoyées à WooCommerce : " . json_encode($broker_data) . "\n";
 
-    if (!is_wp_error($product_id)) {
+            if (isset($broker['broker_agency']) && !empty($broker['broker_agency'])) {
+                echo "Confirmation : L'agence '{$broker['broker_agency']}' est bien incluse pour le courtier {$broker['broker_name']}.\n";
+            } else {
+                echo "Avertissement : Aucune agence trouvée pour le courtier {$broker['broker_name']}.\n";
+            }
 
-        // Mettre à jour le prix du produit
-
-        update_post_meta($product_id, '_regular_price', $broker_price);
-
-        update_post_meta($product_id, '_price', $broker_price);
-
-
-        // Définir le produit comme simple produit
-
-        wp_set_object_terms($product_id, 'simple', 'product_type');
-
-
-        echo "Courtier ajouté avec succès : $broker_name\n";
-
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $woocommerce_api_url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+            curl_setopt($ch, CURLOPT_POST, 1);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($broker_data));
+            curl_setopt($ch, CURLOPT_USERPWD, $consumer_key . ":" . $consumer_secret);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+            
+            $response = curl_exec($ch);
+            
+            if (curl_errno($ch)) {
+                echo 'Erreur cURL : ' . curl_error($ch) . "\n";
+            } else {
+                $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                $response_data = json_decode($response, true);
+                
+                if ($http_code !== 201) {
+                    echo "Erreur HTTP $http_code lors de l'ajout du courtier. Réponse complète de l'API :\n" . $response . "\n";
+                } elseif (isset($response_data['name'])) {
+                    echo "Courtier ajouté : " . $response_data['name'] . "\n";
+                } else {
+                    echo "Erreur lors de l'ajout du courtier : " . json_encode($response_data) . "\n";
+                }
+            }
+            
+            curl_close($ch);
+        }
     } else {
-
-        echo "Erreur lors de l'ajout du courtier : " . $product_id->get_error_message() . "\n";
-
+        echo "Aucun courtier trouvé dans la collection 'centris_brokers_full'.\n";
     }
-
+    
+} catch (Exception $e) {
+    echo "Erreur lors de la connexion à MongoDB ou de l'accès à la collection: " . $e->getMessage() . "\n";
 }
-
+?>
