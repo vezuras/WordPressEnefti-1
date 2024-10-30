@@ -1,6 +1,7 @@
 <?php
 // Inclure les dépendances MongoDB et WordPress
-require 'vendor/autoload.php'; // Charger MongoDB
+// require 'vendor/autoload.php'; // Charger MongoDB
+require __DIR__ . '/../vendor/autoload.php';
 require_once($_SERVER['DOCUMENT_ROOT'] . '/wp-load.php'); // Charger WordPress
 
 // Informations de connexion MongoDB
