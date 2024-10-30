@@ -1,0 +1,148 @@
+/*------------------------------------------------------------------
+[Dashboard Stylesheet]
+[Table of contents]
+
+1. Meta Fields
+2. Redux Framework
+-------------------------------------------------------------------*/
+.parent_menu img {
+    padding-top: 3px !important;
+    position: relative !important;
+    top: 3px;
+    width: 20px !important;
+}
+.cmb-type-group .cmb2-wrap>.cmb-field-list>.cmb-row, .cmb2-postbox .cmb2-wrap>.cmb-field-list>.cmb-row {
+    padding: 10px !important;
+}
+/*CUSTOM METABOX STYLE*/
+.post-type-page #poststuff #page_metaboxs .inside {
+    margin: 0;
+    padding: 0;
+}
+.post-type-page .postbox table.form-table {
+    margin: 0;
+}
+.cmb-type-title.cmb_id_mt_test_title,
+.cmb_id_smartowl_test_title {
+    background: #232331 none repeat scroll 0 0;
+}
+.cmb-type-title.cmb_id_mt_test_title h1,
+.cmb-type-title.cmb_id_mt_test_title .cmb_metabox_description,
+.cmb_id_smartowl_test_title h1,
+.cmb_id_smartowl_test_title .cmb_metabox_description {
+    color: #ffffff;
+    padding: 0;
+}
+.cmb-type-title.cmb_id_mt_test_title h5,
+.cmb_id_smartowl_test_title h5 {
+    display: none;
+}
+.cmb-type-title.cmb_id_mt_test_title > td,
+.cmb_id_smartowl_test_title td {
+    padding: 20px;
+}
+.cmb_id_smartowl_header_custom_variant li .cmb_option {
+    position: absolute;
+    top: 45%;
+}
+.cmb_id_smartowl_header_custom_variant li,
+.cmb_id_smartowl_footer_custom_row1_layout .cmb_radio_list.cmb_list > li,
+.cmb_id_smartowl_footer_custom_row2_layout .cmb_radio_list.cmb_list > li,
+.cmb_id_smartowl_footer_custom_row3_layout .cmb_radio_list.cmb_list > li {
+    float: left;
+    width: 100%;
+    margin-bottom: 30px !important;
+    position: relative;
+}
+.cmb_id_smartowl_header_custom_variant li img{
+    border: 1px solid rgba(68, 168, 168,.5);
+}
+.cmb_id_smartowl_footer_custom_row1_layout .cmb_radio_list.cmb_list li .cmb_option,
+.cmb_id_smartowl_footer_custom_row2_layout .cmb_radio_list.cmb_list li .cmb_option,
+.cmb_id_smartowl_footer_custom_row3_layout .cmb_radio_list.cmb_list li .cmb_option {
+    position: absolute;
+    top: 35%;
+}
+.cmb_id_smartowl_header_custom_variant li label,
+.cmb_id_smartowl_footer_custom_row1_layout .cmb_radio_list.cmb_list li label,
+.cmb_id_smartowl_footer_custom_row2_layout .cmb_radio_list.cmb_list li label,
+.cmb_id_smartowl_footer_custom_row3_layout .cmb_radio_list.cmb_list li label {
+    margin-left: 25px;
+}
+#redux-form-wrapper #redux-header h2 {
+    color: rgb(255, 255, 255);
+    font-size: 30px;
+    margin: 10px 0;
+}
+/*1. Meta Fields*/
+.meta_box_label {
+    display: block;
+    float: left;
+    padding: 5px;
+    width: 25%;
+}
+.custom_metas > select {
+    width: 30%;
+}
+.custom_metas small {
+    font-weight: bold;
+    padding-left: 10px;
+}
+.metabox-page.custom_metas {
+    margin-bottom: 10px;
+}
+.vc_element-icon.modeltheme_shortcode{
+    background: url('../images/ModelTheme_logo.png');
+}
+.redux-message.redux-notice.notice {
+    display: none;
+}
+.eg-update-notice-wrap,
+.rs-update-notice-wrap,
+.redux-message.redux-notice.notice {
+    display: none;
+}
+
+/*2. Redux Framework*/
+.enefti_divider h3 {
+    font-size: 23px;
+    font-weight: 300;
+    margin: 10px !important;
+}
+.enefti_divider p {
+    display: none !important;
+}
+.enefti_divider *{
+    color: #fff;
+}
+.enefti_divider {
+    background: #232331 none repeat scroll 0 0;
+    border: 0 none;
+    color: #ffffff;
+    margin: 0;
+}
+.redux-container .redux-main .input-append,
+.redux-container .redux-main .input-prepend {
+    font-size: 15px!important;
+}
+/*Notice addons*/
+div#redux-connect-message,
+.berocket_admin_notice.berocket_admin_notice_1,
+.notice.notice-info.berocket-rate-stars.berocket-rate-stars-block,
+.redux-update-google-fonts.notice,
+div#message.updated.dokan-message,
+#vc_license-activation-notice,
+.notice.notice-info.lvca-notice-rate,
+.fs-notice.fs-slug-simple-sitemap.fs-type-plugin,
+.notice.dokan-upgrade-promotional-notice,
+body .fs-notice.fs-slug-addons-for-visual-composer,
+#redux-header .rAds{
+    display: none !important;
+}
+.redux-container .redux-main .input-prepend,
+.redux-container .redux-main .input-append {
+    font-size: 14px;
+}
+.notice-warning.notice-alt{
+    display: none!important;
+}
