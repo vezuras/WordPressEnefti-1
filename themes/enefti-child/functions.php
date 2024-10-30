@@ -9,3 +9,4 @@ function enefti_child_test_comment() {
     echo "<!-- Test de functions.php du thème enfant actif -->";
 }
 add_action('wp_footer', 'enefti_child_test_comment');
+?>
