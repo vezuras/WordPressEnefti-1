@@ -5,6 +5,9 @@
  * @package enefti
  */
 
+// *** Commentaire de Test ***
+// Ceci est un test pour vérifier que le fichier functions.php est bien actif dans WordPressEnefti-1
+
 /**
  * Set the content width based on the theme's design and stylesheet.
  */
