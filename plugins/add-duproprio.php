@@ -132,8 +132,8 @@ try {
                     ['key' => 'longitude', 'value' => $annonce['longitude'] ?? ''],
                 ],
                 'categories' => [
-                    ['id' => 400], // Catégorie 'Annonce Immobilière'
-                    ['id' => 218], // Catégorie 'DuProprio'
+                    ['id' => 183], // Catégorie 'Annonce Immobilière'
+                    ['id' => 178], // Catégorie 'DuProprio'
                 ],
                 'images' => !is_null($image_id) ? [['id' => $image_id]] : []
             ];
