@@ -14,24 +14,28 @@ $woocommerce_api_url = "https://nummu.ca/wp-json/wc/v3/products";
 $consumer_key = 'ck_c5b5a2fcc17c9dca0ea3d954ee338c62b5df3d53';
 $consumer_secret = 'cs_f73e1dcb0b4150507596535c309307fba27f36a0';
 
-// Fonction pour télécharger et ajouter une image à la bibliothèque des médias WordPress
+// Fonction pour télécharger et vérifier si une image existe déjà
 function download_and_insert_image_to_wp_media_library($image_url, $broker_id) {
-    if (empty($image_url)) return null;
+    if (empty($image_url)) {
+        return null; // Pas d'image à traiter
+    }
 
     $upload_dir = wp_upload_dir();
     $file_name = 'broker_image_' . $broker_id . '.jpg';
     $file_path = $upload_dir['path'] . '/' . $file_name;
 
-    // Vérifier si l'image existe déjà
     $attachment_id = attachment_url_to_postid($upload_dir['url'] . '/' . $file_name);
-    if ($attachment_id) return $attachment_id;
+    if ($attachment_id) {
+        return $attachment_id;
+    }
 
-    // Télécharger et enregistrer l'image
     $image_data = file_get_contents($image_url);
-    if ($image_data === false) return null;
-    file_put_contents($file_path, $image_data);
+    if ($image_data === false) {
+        return null;
+    }
 
-    // Ajouter l'image dans la Media Library
+    file_put_contents($file_path, $image_data);
+    
     $attachment = [
         'guid' => $upload_dir['url'] . '/' . $file_name,
         'post_mime_type' => 'image/jpeg',
@@ -48,54 +52,60 @@ function download_and_insert_image_to_wp_media_library($image_url, $broker_id) {
     return $attach_id;
 }
 
-// Connexion à MongoDB et traitement des données des courtiers
+// Essai de connexion à MongoDB
 try {
     $client = new MongoDB\Client($MONGO_URI);
     $database = $client->selectDatabase($MONGO_DATABASE);
     $collection = $database->selectCollection('centris_brokers_full');
-    $brokers = $collection->find([], ['limit' => 10])->toArray(); // Récupérer les 10 premiers courtiers
+
+    $brokers = $collection->find([], ['limit' => 25])->toArray();
 
     if (!empty($brokers)) {
         foreach ($brokers as $broker) {
             $image_id = !empty($broker['broker_image_url']) ? download_and_insert_image_to_wp_media_library($broker['broker_image_url'], (string)$broker['_id']) : null;
 
-            // Format des données
-            $languages = implode(', ', array_map('ucwords', explode(', ', strtolower($broker['broker_language'] ?? ''))));
-            $broker_phone = !empty($broker['broker_phone']) ? implode(', ', $broker['broker_phone']) : 'Non disponible';
+            $formatted_job = strtoupper(str_replace(['Residential', 'Commercial'], ['Résidentiel', 'Commercial'], $broker['broker_job']));
+            $language_options = ['french' => 'FR', 'english' => 'EN', 'spanish' => 'ES', 'creole' => 'CR', 'german' => 'DE', 'italian' => 'IT', 'portuguese' => 'PT', 'dutch' => 'NL', 'russian' => 'RU', 'chinese' => 'ZH', 'japanese' => 'JA', 'korean' => 'KO'];
+            $languages = implode(', ', array_map(function($lang) use ($language_options) {
+                return $language_options[$lang] ?? strtoupper($lang);
+            }, explode(', ', strtolower($broker['broker_language']))));
 
-            // Préparation des données du produit pour WooCommerce
             $broker_data = [
                 'name' => $broker['broker_name'] ?? 'Courtier sans nom',
                 'type' => 'external',
                 'regular_price' => '',
-                'description' => "<p><strong>Zone(s) servie(s) :</strong> {$broker['broker_area']}</p>",
+                'sale_price' => '',
+                'description' => !empty($broker['broker_area']) ? "<strong>Zone(s) servie(s):</strong> {$broker['broker_area']}<br>" : '',
                 'short_description' => "
-                    <p><strong>Poste :</strong> {$broker['broker_job']}<br>
-                    <strong>Agence :</strong> {$broker['broker_agency']}<br>
-                    <strong>Licence :</strong> {$broker['broker_license']}<br>
-                    <strong>Adresse :</strong> {$broker['broker_address']}<br>
-                    <strong>Langue(s) :</strong> {$languages}<br>
-                    <strong>Téléphone :</strong> {$broker_phone}</p>",
+                    <p><strong>POSTE:</strong> $formatted_job<br>
+                    <strong>AGENCE:</strong> " . strtoupper($broker['broker_agency']) . "<br>
+                    {$broker['broker_address']}<br>
+                    <strong>LANGUE(S):</strong> $languages</p>",
                 'external_url' => $broker['broker_url'] ?? '',
-                'button_text' => 'Voir la fiche du courtier',
+                'button_text' => 'Fiche Centris',
                 'meta_data' => [
                     ['key' => 'broker_id', 'value' => (string)$broker['_id']],
-                    ['key' => 'broker_agency', 'value' => $broker['broker_agency']],
-                    ['key' => 'broker_license', 'value' => $broker['broker_license']],
-                    ['key' => 'broker_phone', 'value' => json_encode($broker['broker_phone'])],
-                    ['key' => 'broker_language', 'value' => $languages],
-                    ['key' => 'broker_area', 'value' => $broker['broker_area']],
-                    ['key' => 'broker_city', 'value' => $broker['broker_city']],
-                    ['key' => 'broker_province', 'value' => $broker['broker_province']],
-                    ['key' => 'broker_postal_code', 'value' => $broker['broker_postal_code']],
-                    ['key' => 'broker_address', 'value' => $broker['broker_address']],
+                    ['key' => 'broker_license', 'value' => $broker['broker_license'] ?? ''],
+                    ['key' => 'broker_agency', 'value' => strtoupper($broker['broker_agency']) ?? ''], // Ajout de l'agence ici
+                    ['key' => 'broker_phone', 'value' => json_encode($broker['broker_phone'] ?? [])],
+                    ['key' => 'broker_city', 'value' => $broker['broker_city'] ?? ''],
+                    ['key' => 'broker_province', 'value' => $broker['broker_province'] ?? ''],
+                    ['key' => 'broker_postal_code', 'value' => $broker['broker_postal_code'] ?? ''],
                     ['key' => 'broker_geolocations', 'value' => json_encode($broker['broker_geolocations'] ?? [])],
+                    ['key' => 'broker_language', 'value' => $languages],
                 ],
-                'categories' => [['id' => 176]], // Catégorie 'Courtier Immobilier'
+                'categories' => [['id' => 176]],
                 'images' => !is_null($image_id) ? [['id' => $image_id]] : []
             ];
 
-            // Envoi des données à WooCommerce
+            echo "Données envoyées à WooCommerce : " . json_encode($broker_data) . "\n";
+
+            if (isset($broker['broker_agency']) && !empty($broker['broker_agency'])) {
+                echo "Confirmation : L'agence '{$broker['broker_agency']}' est bien incluse pour le courtier {$broker['broker_name']}.\n";
+            } else {
+                echo "Avertissement : Aucune agence trouvée pour le courtier {$broker['broker_name']}.\n";
+            }
+
             $ch = curl_init();
             curl_setopt($ch, CURLOPT_URL, $woocommerce_api_url);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
@@ -103,32 +113,31 @@ try {
             curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($broker_data));
             curl_setopt($ch, CURLOPT_USERPWD, $consumer_key . ":" . $consumer_secret);
             curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
-
+            
             $response = curl_exec($ch);
-            $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-
+            
             if (curl_errno($ch)) {
                 echo 'Erreur cURL : ' . curl_error($ch) . "\n";
-            } elseif ($http_code !== 201) {
-                echo "Erreur HTTP $http_code lors de l'ajout du courtier. Réponse complète :\n" . $response . "\n";
             } else {
-                echo "Courtier ajouté : {$broker['broker_name']}\n";
+                $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                $response_data = json_decode($response, true);
+                
+                if ($http_code !== 201) {
+                    echo "Erreur HTTP $http_code lors de l'ajout du courtier. Réponse complète de l'API :\n" . $response . "\n";
+                } elseif (isset($response_data['name'])) {
+                    echo "Courtier ajouté : " . $response_data['name'] . "\n";
+                } else {
+                    echo "Erreur lors de l'ajout du courtier : " . json_encode($response_data) . "\n";
+                }
             }
-
+            
             curl_close($ch);
         }
     } else {
         echo "Aucun courtier trouvé dans la collection 'centris_brokers_full'.\n";
     }
+    
 } catch (Exception $e) {
-    echo "Erreur lors de la connexion à MongoDB ou de l'accès à la collection : " . $e->getMessage() . "\n";
+    echo "Erreur lors de la connexion à MongoDB ou de l'accès à la collection: " . $e->getMessage() . "\n";
 }
 ?>
-
-
-
-
-
-<!-- Meta_data : Contient toutes les données spécifiques aux courtiers, comme broker_id, broker_agency, broker_license, broker_phone, broker_language, broker_area, broker_city, broker_province, broker_postal_code, broker_address, et broker_geolocations.
-Short_description : Présente une description concise incluant le poste, l'agence, l’adresse, les langues parlées, et le téléphone.
-Categories : Définit la catégorie du produit comme Courtier Immobilier avec l’ID 259. -->
