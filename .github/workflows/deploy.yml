@@ -19,6 +19,10 @@ jobs:
         host: ${{ secrets.SERVER_HOST }}
         username: ${{ secrets.SERVER_USER }}
         key: ${{ secrets.SERVER_SSH_KEY }}
+        port: 22
         script: |
           cd /opt/bitnami/wordpress/WordPressEnefti-1
           git pull origin main
+          sudo chown -R bitnami:daemon plugins themes
+          sudo find plugins themes -type d -exec chmod 755 {} \;
+          sudo find plugins themes -type f -exec chmod 644 {} \;
