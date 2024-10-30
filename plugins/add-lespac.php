@@ -182,8 +182,8 @@ try {
                     ['key' => 'longitude', 'value' => isset($annonce['address']['longitude']) ? (string)$annonce['address']['longitude'] : ''],
                 ],
                 'categories' => [
-                    ['id' => 400], // Catégorie 'Annonce Immobilière' - Vérifiez cet ID
-                    ['id' => 254], // Catégorie 'LesPAC' - Vérifiez cet ID
+                    ['id' => 183], // Catégorie 'Annonce Immobilière' - Vérifiez cet ID
+                    ['id' => 180], // Catégorie 'LesPAC' - Vérifiez cet ID
                 ],
                 'images' => !is_null($image_id) ? [['id' => $image_id]] : []
             ];
